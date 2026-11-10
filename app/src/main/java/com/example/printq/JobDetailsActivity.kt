@@ -1,5 +1,6 @@
 package com.example.printq
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -16,8 +17,20 @@ class JobDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_job_details)
 
-        // Receive the data sent by the previous screen.
-        val job = intent.getSerializableExtra(Extras.JOB) as PrintJob
+        // Receive the data sent by the previous screen safely across Android API versions.
+        val job = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(Extras.JOB, PrintJob::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getSerializableExtra(Extras.JOB) as? PrintJob
+        }
+
+        if (job == null) {
+            Toast.makeText(this, "Job data unavailable", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
         val role = intent.getStringExtra(Extras.ROLE) ?: Extras.STUDENT
 
         val tvStatus = findViewById<TextView>(R.id.tvStatus)
